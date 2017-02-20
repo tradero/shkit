@@ -1,9 +1,9 @@
 #!/bin/sh
 #set -x
 
-. /root/.salva/shell/array.subr
-. /root/.salva/shell/debug.subr
-. /root/.salva/shell/lines.subr
+. array.subr
+. debug.subr
+. lines.subr
 
 check_pf_line () {
 	check_line /etc/pf.conf "$1"
