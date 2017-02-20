@@ -1,6 +1,20 @@
 # shkit
 
-### lines
+### requirements
+- most of the libs in shkit depends only on /bin/sh
+- "lines" library requires pcregrep
+
+### debug.subr
+To use debug.subr after including it in your file, You need to set DEBUG env variable. Example usage:
+```sh
+debug "section1" "some text to print"
+debug "section2" "some text to print"
+debug "section1" "some text to print"
+debug "section2" "some text to print"
+```
+You should see nice and colored output for each section.
+
+### lines.subr
 | Function | Description |
 | --- | --- |
 | `check_line $filename $pattern` | check if regex $pattern line exists in $filename |
@@ -29,6 +43,12 @@ ext_if=\"hn0\"\\
 \\
 "
 ```
+
+### array
+We are assuming, that arrays is a string where each words represents an item of array.
+For example: "foo bar baz", is an array of three items.
+
+array_random "foo bar baz" - random word should be returned
 
 ## what it does to your files?
 reference (r&d doc): https://gist.github.com/krzysztofantczak/ab3233ec700c27f2f59222653656cde6
