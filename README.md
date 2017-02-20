@@ -1,3 +1,36 @@
+# shkit
+
+### lines
+| Function | Description |
+| --- | --- |
+| `check_line $filename $pattern` | check if regex $pattern line exists in $filename |
+| `insert_before $filename $pattern $text` | insert $text into $filename before regex $pattern |
+| `insert_after $filename $pattern $text` | insert $text into $filename after regex $pattern |
+| `fix_eof_line $filename` | insert empty line at the end of the file - if doesn't exists |
+| `update $filename $pattern $text` | replace $pattern in $filename with $text |
+
+and the most awesome:
+
+| Function | Description |
+| --- | --- |
+| `upsert_before $filename $pattern $text $pattern2 $text2` | if $pattern doesn't exist insert $text2 before $pattern2 regex otherwise replace $pattern in $filename with $text |
+| `upsert_after $filename $pattern $text $pattern2 $text2` | (not implemented yet) |
+
+```
+sample usage of upsert_before:
+$filename  = $pf = /etc/pf.conf
+$pattern  = "ext_if=.*" - update stage, we are using this regex to find the line we want to update
+$text     = 'ext_if="hn0"' - paste this text in place of the line founded by $pattern
+$pattern2 = "^(.*=|set|scrub|table|nat|rdr|pass|block)" - find block before which we will paste $text2
+$text2    = "# INTERFACES\\......" - text which will be pasted in place which was found by $pattern2
+
+upsert_before $pf "ext_if=.*" 'ext_if="hn0"' "^(.*=|set|scrub|table|nat|rdr|pass|block)" "# INTERFACES\\
+ext_if=\"hn0\"\\
+\\
+"
+```
+
+## what it does to your files?
 reference (r&d doc): https://gist.github.com/krzysztofantczak/ab3233ec700c27f2f59222653656cde6
 
 /etc/pf.conf content
