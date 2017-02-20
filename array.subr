@@ -1,0 +1,38 @@
+in_array_key () {
+	found=0
+	for i in $2; do
+		if [ $(echo $i | grep $1) ]; then
+			found=1
+		fi
+	done
+
+	echo $found
+}
+in_array_val () {
+	found=0
+	for i in $2; do
+		if [ $(echo $i | grep $1) ]; then
+			found=1
+		fi
+	done
+
+	echo $found
+}
+
+array_random () {
+	size=$(echo "$1" | wc -w | tr -d " ")
+	rand=$(jot -r 1 1 $size)
+	#echo "random number $rand (0-$size)\n"
+	cnt=0
+	for i in $1; do
+		cnt=$(( $cnt + 1 ))
+		#echo "$i comparing $cnt vs $rand\n"
+		if [ $cnt -eq $rand ]; then
+			echo $i;
+		fi
+		#cnt=$(( $cnt + 1 ))
+		#echo "counter incremented: $cnt\n"
+	done
+
+	return $cnt
+}

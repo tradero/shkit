@@ -1,0 +1,30 @@
+COLORS="31 32 33 34 35 36"
+ASSIGNED=""
+
+debug () {
+	if [ ! -z "${DEBUG}" ]; then
+		if [ $(in_array_key "$1" "$ASSIGNED") == "0" ]; then
+			prefix=$(array_random "$COLORS")
+			repeats=0
+			while [ $(in_array_val "$prefix" "$ASSIGNED") == "1" ]; do
+				prefix=$(array_random "$COLORS")
+				repeats=$(( $repeats + 1 ))
+				if [ $repeats -gt $(echo "$COLORS" | wc -w) ]; then
+					#echo "to low on colors"
+					prefix="0"
+					break
+				fi
+			done
+			ASSIGNED="$1=$prefix $ASSIGNED"
+			#echo $ASSIGNED
+		else
+			for as in $ASSIGNED; do
+				if [ $(echo $as | grep $1) ]; then
+					prefix=$(echo "$as"| cut -d= -f2)
+				fi
+			done
+		fi
+		#echo -e "\033[${prefix}m$1\033[0m $2"
+		printf "%s \033[${prefix}m%-10s\033[0m $2\n" "$(date +'%T')" "$1"
+	fi
+}
