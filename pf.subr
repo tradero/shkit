@@ -1,0 +1,13 @@
+
+check_pf_line () {
+        check_line /etc/pf.conf "$1"
+}
+
+reset_pf () {
+	if [ ! -f "$1.backup" ]; then
+		cp $1 "$1.backup"
+	fi
+        cp "$1.backup" $1
+        return
+}
+

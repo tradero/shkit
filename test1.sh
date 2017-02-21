@@ -7,21 +7,12 @@
 . string.subr
 . escape.subr
 . grep.subr
-
-check_pf_line () {
-	check_line /etc/pf.conf "$1"
-}
-
-reset_pf () {
-	cp /etc/pf.conf.backup /etc/pf.conf
-	return
-}
-
-reset_pf
-clear;
+. pf.subr
 
 pf=/etc/pf.conf
-fix_eof_line $pf
+
+reset_pf      $pf
+fix_eof_line  $pf
 
 upsert_before $pf 'ext_if=.*' 'ext_if="hn0"' '^(.*=|set|scrub|table|nat|rdr|pass|block)' '# INTERFACES\next_if="hn0"\n\n\n'
 

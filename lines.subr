@@ -34,7 +34,7 @@ insert_after () {
 	if [ $(echo "$msize2" | tail -n1 | grep "^[0-9]*:" | wc -l) -eq 0 ] && [ "$msize" != "" ]; then debug "after" "need to count $msize"; msize=$(( $msize+`echo "$msize2"|wc -l` )); fi
 	if [ "$msize" == "" ]; then debug "insert_after" "nothing matched, skipping"; return; fi
 
-	debug "after" "MSIZE: $msize"
+	debug "after" "matched lines: $msize"
 	start=$(echo $match | cut -d: -f1)
 	end=$(( 1 + $msize ))
 
