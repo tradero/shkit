@@ -1,0 +1,25 @@
+normalize () {
+	echo -e "$*" | sed 's/\\n/\\\
+/g'
+}
+
+join () {
+	size=$#
+	cntr=0
+	sepr=""
+	out=""
+
+	for l in "$@"; do
+		if [ $cntr -eq 0 ]; then
+			sepr=$l
+		else
+			out="$out$l"
+			if [ $cntr -lt $(( $size-1 )) ]; then
+				out="$out$sepr"
+			fi
+		fi
+		cntr=$(( cntr + 1 ))
+	done
+
+	normalize $out
+}

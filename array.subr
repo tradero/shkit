@@ -1,7 +1,7 @@
 in_array_key () {
 	found=0
 	for i in $2; do
-		if [ $(echo $i | grep $1) ]; then
+		if [ $(echo $i | grep "^$1=") ]; then
 			found=1
 		fi
 	done
@@ -11,7 +11,7 @@ in_array_key () {
 in_array_val () {
 	found=0
 	for i in $2; do
-		if [ $(echo $i | grep $1) ]; then
+		if [ $(echo $i | grep "=$1$") ]; then
 			found=1
 		fi
 	done

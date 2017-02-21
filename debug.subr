@@ -19,7 +19,8 @@ debug () {
 			#echo $ASSIGNED
 		else
 			for as in $ASSIGNED; do
-				if [ $(echo $as | grep $1) ]; then
+				if [ $(echo $as | grep "^$1=") ]; then
+					#prefix="pik "
 					prefix=$(echo "$as"| cut -d= -f2)
 				fi
 			done

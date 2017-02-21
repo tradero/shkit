@@ -1,8 +1,9 @@
+
 check_line () {
 	filename=$1
-	pattern=$2
+	pattern=$(escape_regex $2)
 
-	if [ `cat $filename | pcregrep -Mie "$2" | wc -l` -gt 0 ]; then
+	if [ `pcregrep -Mie "$pattern" "$filename" | wc -l` -gt 0 ]; then
 		echo 1
 	else
 		echo 0
@@ -11,9 +12,14 @@ check_line () {
 
 insert_after () {
 	filename=$1
-	pattern=$2
-	text=$3
+	pattern=$(escape_regex $2)
+	text=$(normalize "$3")
 	size=$(cat $filename | wc -l)
+
+        debug "insert_after" "filename: $filename"
+        debug "insert_after" "pattern : $pattern"
+        debug "insert_after" "text    : $text"
+        debug "insert_after" "filesize: $size"
 
 	patched=$(pcregrep -Mine "${pattern}(\n|.)*${text}" $filename | wc -l)
 	if [ $patched -gt 0 ]; then 
@@ -21,47 +27,77 @@ insert_after () {
 		return; 
 	fi
 
-	match=$(pcregrep -Mine "$pattern" $filename)
-	msize=$(pcregrep -Mine "$pattern" $filename | grep "^[0-9]*:" | tail -n1 | cut -d: -f1)
-	msize2=$(pcregrep -Mine "$pattern" $filename | pcregrep -Mie "^[0-9]+:(\n|.)*")
+	match=$(pcregrep -Mine "$2" $filename)
+	msize=$(pcregrep -Mine "$2" $filename | grep "^[0-9]*:" | tail -n1 | cut -d: -f1)
+	msize2=$(pcregrep -Mine "$2" $filename | pcregrep -Mie "^[0-9]+:(\n|.)*")
 	msize3=$(echo "$msize2" | tail -n1 | grep "^[0-9]*:")
 	if [ $(echo "$msize2" | tail -n1 | grep "^[0-9]*:" | wc -l) -eq 0 ] && [ "$msize" != "" ]; then debug "after" "need to count $msize"; msize=$(( $msize+`echo "$msize2"|wc -l` )); fi
-	if [ "$msize" == "" ]; then return; fi
+	if [ "$msize" == "" ]; then debug "insert_after" "nothing matched, skipping"; return; fi
 
 	debug "after" "MSIZE: $msize"
 	start=$(echo $match | cut -d: -f1)
 	end=$(( 1 + $msize ))
 
 	debug "after" "inserting at line: ${end}"
-	sed "${end}i\\
-${text}" $filename > /tmp/ppf.tmp
-	mv /tmp/ppf.tmp $filename
+#	sed "${end}i\\
+#${text}" $filename > /tmp/ppf.tmp
+#	mv /tmp/ppf.tmp $filename
+
+        echo "$text" > /tmp/tmp.text
+
+        marker="__MARKER__"
+        sed "${end}i\\
+$marker\\
+" $filename > /tmp/ppf1.tmp
+
+        sed -e "/$marker/r /tmp/tmp.text" /tmp/ppf1.tmp | sed -e "/$marker/d" > /tmp/ppf.tmp
+        mv /tmp/ppf.tmp $filename
+
+        rm /tmp/tmp.text
+        rm /tmp/ppf1.tmp
 }
 
 insert_before () {
 	filename=$1
-	pattern=$2
-	text="$3"
-	size=$(cat $filename | wc -l)
+	pattern=$(escape_regex $2)
+	text=$(normalize $3)
+	# #$(escape $(normalize "$3"))
+	size=$(cat $filename | wc -l | tr -d ' ')
 
-	patched=$(pcregrep -Mine "${text}(\n|.)*${pattern}" $filename | wc -l)
+        debug "insert_before" "filename: $filename"
+        debug "insert_before" "pattern : $pattern"
+        #debug "insert_before" "text    : $text"
+        debug "insert_before" "filesize: $size"
+
+	patched=$(pcregrep -Mine "${text}(\n|.)*$2" $filename | wc -l)
 	if [ $patched -gt 0 ]; then 
-		debug "before" "already patched, skipping..."; 
+		debug "insert_before" "already patched, skipping..."; 
 		return; 
 	fi
 
-        match=$(pcregrep -Mine "$pattern" $filename)
-        msize=$(pcregrep -Mine "$pattern" $filename | tail -n1 | cut -d: -f1)
+        match=$(pcregrep -Mine "$2" $filename)
+        msize=$(pcregrep -Mine "$2" $filename | tail -n1 | cut -d: -f1)
 
-        debug "before" "MSIZE: $msize"
+        debug "insert_before" "matched lines: $msize"
 
 	start=$(echo $match | cut -d: -f1)
 	if [ "$msize" == "" ]; then return; fi
 
-	debug "before" "inserting at line: ${start}"
-	sed "${start}i\\ 
-${text}" $filename > /tmp/ppf.tmp
+	debug "insert_before" "inserting at line: ${start}"
+	#result=$(sed "${start}i\\ 
+#${text}" $filename)
+	echo "$text" > /tmp/tmp.text
+	
+	marker="__MARKER__"
+	sed "${start}i\\
+$marker\\
+" $filename > /tmp/ppf1.tmp
+
+	sed -e "/$marker/r /tmp/tmp.text" /tmp/ppf1.tmp | sed -e "/$marker/d" > /tmp/ppf.tmp 
 	mv /tmp/ppf.tmp $filename
+	
+	rm /tmp/tmp.text
+	rm /tmp/ppf1.tmp
 }
 
 fix_eof_line () {
@@ -73,8 +109,8 @@ fix_eof_line () {
 
 update () {
 	filename=$1
-	pattern=$2
-	text=$3
+	pattern=$(escape_regex $2)
+	text=$(normalize $3)
 
 	sed "s/${pattern}/${text}/" $filename > /tmp/ppf.tmp
 	mv /tmp/ppf.tmp $filename
@@ -82,14 +118,23 @@ update () {
 
 upsert_before () {
 	filename=$1
-	pattern=$2
-	text=$3
-	pattern2=$4
-	text2=$5
+	pattern=$2 #$(escape_regex $2)
+	text=$(normalize $3)
+	pattern2=$4 #$(escape_regex $4)
+	text2=$5 #$(normalize $5)
+
+	debug "upsert" "filename: $filename"
+	debug "upsert" "pattern : $pattern"
+	#debug "upsert" "text    : $text"
+	debug "upsert" "pattern2: $pattern2"
+	#debug "upsert" "text2   : $text2"
 
 	if [ $(check_pf_line "$pattern") -eq 0 ]; then
-		insert_before $filename "$pattern2" "$text2"
+		debug "upsert" "calling insert_before()"
+		insert_before $filename $pattern2 "$text2"
 	else
+		debug "upsert" "calling update()"
 		update $filename "$pattern" "$text"
 	fi
 }
+
