@@ -11,12 +11,14 @@
 
 pf=/etc/pf.conf
 
-reset_pf      $pf
+#reset_pf      $pf
 fix_eof_line  $pf
+
+# file manipulation PoC
 
 upsert_before $pf 'ext_if=.*' 'ext_if="hn0"' '^(.*=|set|scrub|table|nat|rdr|pass|block)' '# INTERFACES\next_if="hn0"\n\n\n'
 
-if [ $(check_pf_line 'nat on $ext_if from ($jls_if:network) to ! ($jls_if:network) -> ($ext_if:0)') -eq 0 ]; then
+if [ $(check_pf_line $(escape_regex 'nat on $ext_if from ($jls_if:network) to ! ($jls_if:network) -> ($ext_if:0)')) -eq 0 ]; then
 	insert_after $pf "^(.*=.*|set|scrub|table(\n|.)*table)" "$(join '\n'\
 		'\n# NAT'\
 		'nat on $ext_if from ($jls_if:network) to ! ($jls_if:network) -> ($ext_if:0)'\

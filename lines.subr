@@ -1,7 +1,8 @@
 
 check_line () {
 	filename=$1
-	pattern=$(escape_regex $2)
+	#pattern=$(escape_regex $2)
+	pattern=$2
 
 	if [ `pcregrep -Mie "$pattern" "$filename" | wc -l` -gt 0 ]; then
 		echo 1
@@ -16,16 +17,16 @@ insert_after () {
 	text=$(normalize "$3")
 	size=$(cat $filename | wc -l)
 
-        debug "insert_after" "filename: $filename"
-        debug "insert_after" "pattern : $pattern"
-        debug "insert_after" "text    : $text"
-        debug "insert_after" "filesize: $size"
-
-	patched=$(pcregrep -Mine "${pattern}(\n|.)*${text}" $filename | wc -l)
+	patched=$(pcregrep -Mine "$2(\n|.)*${text}" $filename | wc -l)
 	if [ $patched -gt 0 ]; then 
 		debug "after" "already patched, skipping..."; 
 		return; 
 	fi
+
+        debug "insert_after" "filename: $filename"
+        debug "insert_after" "pattern : $pattern"
+        debug "insert_after" "text    : $text"
+        debug "insert_after" "filesize: $size"
 
 	match=$(pcregrep -Mine "$2" $filename)
 	msize=$(pcregrep -Mine "$2" $filename | grep "^[0-9]*:" | tail -n1 | cut -d: -f1)
@@ -64,16 +65,18 @@ insert_before () {
 	# #$(escape $(normalize "$3"))
 	size=$(cat $filename | wc -l | tr -d ' ')
 
-        debug "insert_before" "filename: $filename"
-        debug "insert_before" "pattern : $pattern"
-        #debug "insert_before" "text    : $text"
-        debug "insert_before" "filesize: $size"
+	#debug "insert_before" "patching matching: ${text}(\n|.)*${pattern}" 
 
-	patched=$(pcregrep -Mine "${text}(\n|.)*$2" $filename | wc -l)
+	patched=$(pcregrep -Mie "${text}(\n|.)*${pattern}" $filename | wc -l)
 	if [ $patched -gt 0 ]; then 
 		debug "insert_before" "already patched, skipping..."; 
 		return; 
 	fi
+
+        debug "insert_before" "filename: $filename"
+        debug "insert_before" "pattern : $pattern"
+        #debug "insert_before" "text    : $text"
+        debug "insert_before" "filesize: $size"
 
         match=$(pcregrep -Mine "$2" $filename)
         msize=$(pcregrep -Mine "$2" $filename | tail -n1 | cut -d: -f1)
@@ -118,22 +121,25 @@ update () {
 
 upsert_before () {
 	filename=$1
-	pattern=$2 #$(escape_regex $2)
+	pattern=$(escape_regex $2)
 	text=$(normalize $3)
 	pattern2=$4 #$(escape_regex $4)
 	text2=$5 #$(normalize $5)
 
-	debug "upsert" "filename: $filename"
-	debug "upsert" "pattern : $pattern"
+	#debug "upsert" "filename: $filename"
+	#debug "upsert" "pattern : $pattern"
 	#debug "upsert" "text    : $text"
-	debug "upsert" "pattern2: $pattern2"
+	#debug "upsert" "pattern2: $pattern2"
 	#debug "upsert" "text2   : $text2"
 
-	if [ $(check_pf_line "$pattern") -eq 0 ]; then
-		debug "upsert" "calling insert_before()"
+	#debug "upsert_before" "checking if $pattern exists in $filename..."
+	#debug "upsert_check" "$(check_pf_line $2)"
+
+	if [ $(check_pf_line "$2") -eq 0 ]; then
+		debug "upsert_before" "calling insert_before()"
 		insert_before $filename $pattern2 "$text2"
 	else
-		debug "upsert" "calling update()"
+		debug "upsert_before" "calling update()"
 		update $filename "$pattern" "$text"
 	fi
 }
