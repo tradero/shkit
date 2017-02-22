@@ -1,0 +1,24 @@
+. debug.subr
+
+OS=$(uname | tr '[:upper:]' '[:lower:]')
+
+import () {
+	for pkg in $@; do
+
+		debug "import" "processing $pkg"
+
+		if [ -f "$pkg.subr" ]; then
+			debug "import" "	importing file $pkg"
+			. $pkg.subr
+		elif [ -d "$pkg" ]; then
+
+			if [ -f "$pkg/$OS.subr" ]; then
+
+				debug "import" "	importing $pkg/$OS"
+				. $pkg/$OS.subr
+			fi
+		fi
+
+	done
+}
+

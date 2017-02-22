@@ -1,0 +1,7 @@
+
+pkg () {
+
+	debug "pkg/freebsd" "PKG function FreeBSD style ;)"
+
+	echo pkg $@
+}

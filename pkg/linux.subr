@@ -1,0 +1,6 @@
+
+pkg () {
+
+	echo "PKG function Linux style ;)"
+
+}
